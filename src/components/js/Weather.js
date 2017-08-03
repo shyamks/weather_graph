@@ -10,7 +10,8 @@ class Weather extends Component {
         this.state = {
             maxTemp: 0,
             minTemp: 0,
-            chart: {}
+            chart: {},
+            sortedTemp: []
         };
 
         this.findTemp = this.findTemp.bind(this);
@@ -29,7 +30,9 @@ class Weather extends Component {
         }
 
         var maxTemp = {temp:0},minTemp = {temp:1000};
+        var temps = []
         for (let data in response.list ){
+          temps.push({temp:response.list[data].main.temp,time:response.list[data].dt_txt})
           if (maxTemp.temp < response.list[data].main.temp ){
             maxTemp.temp = response.list[data].main.temp
           }
@@ -37,6 +40,26 @@ class Weather extends Component {
             minTemp.temp = response.list[data].main.temp
           }
         }
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth()+1;
+
+        var yyyy = today.getFullYear();
+        if(dd<10){
+            dd='0'+dd;
+        }
+        if(mm<10){
+            mm='0'+mm;
+        }
+        var today = yyyy+'-'+mm+'-'+dd;
+        temps.sort(function(a,b){
+          return a.temp - b.temp;
+        });
+        temps = temps.filter(temp => {
+          console.log(temp.time.split(" ")[0] == today);
+          return temp.time.split(" ")[0] == today
+        })
+        tempState.sortedTemp = temps;
         tempState.maxTemp = maxTemp.temp;
         tempState.minTemp = minTemp.temp;
         this.setState(tempState);
@@ -80,6 +103,14 @@ class Weather extends Component {
                 <p>Maxtemp is {this.state.maxTemp}F</p>
                 <p>Mintemp is {this.state.minTemp}F</p>
                 <br/>
+                <div>
+                {this.state.sortedTemp.map(temp =>{
+                    return (
+                      <li>{temp.temp}F at {temp.time}</li>
+                    )
+                  })
+                }
+                </div>
                 <h4> Temp Graph</h4>
                 <button onClick={this.todaysGraph}>Click For Graph</button>
                 {chart}
